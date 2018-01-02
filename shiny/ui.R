@@ -1,4 +1,5 @@
-fluidPage(title="", windowTitle="Uncertainty",
+fluidPage(tags$style(type = "text/css", ".checkbox label { font-size: 14px;}"),
+          title="", windowTitle="Uncertainty",
             navbarPage(theme = shinytheme("readable"),
                        title = "UrbanSim Uncertainty", 
                        tabPanel("Random Seed",
@@ -14,7 +15,9 @@ fluidPage(title="", windowTitle="Uncertainty",
                                          br(),
                                          br(),
                                          uiOutput("rs_helptext"),
+                                         uiOutput("rs_group_diff_ui"),
                                          uiOutput("rs_group_select_ui"),
+                                         uiOutput("rs_fazes_ui"),
                                          uiOutput("rs_submitButton_ui")
                                   ), # end column
                                   column(width = 10,

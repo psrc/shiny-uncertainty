@@ -30,9 +30,3 @@ for (b in 1:length(base)) {
   allruns[[length(allruns)+1]] <- dirlist
 }
 names(allruns) <- names(base) %>% toupper
-
-# how many FAZes to plot
-nlargest <- 20
-
-# should differences between groups be considered
-dif.between.groups <- TRUE

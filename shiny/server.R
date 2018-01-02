@@ -5,13 +5,19 @@ function(input, output, session) {
   observeEvent(input$rs_enterButton, {
     vars$grps <- input$rs_num_group
   })
-  
+
   output$rs_helptext <- renderUI({
-    if (is.null(vars$grps)) {
-      return(NULL)
-    } else {
-      helpText("Select one or more runs for each group")
-    }
+    if (is.null(vars$grps)) return(NULL)
+    helpText("Select one or more runs for each group")
+  })
+  
+  # should differences between groups be considered
+  output$rs_group_diff_ui <- renderUI({
+    if (is.null(vars$grps)) return(NULL)
+    checkboxInput("rs_group_diff", 
+                  label = "Find the difference between groups",
+                  value = TRUE)
+
   })
   
   output$rs_group_select_ui <- renderUI({
@@ -27,22 +33,30 @@ function(input, output, session) {
     }
   })
   
+  output$rs_fazes_ui <- renderUI({
+    if (is.null(vars$grps)) return(NULL)
+    numericInput("rs_fazes", 
+                 label = h6("Select number of FAZes to plot"), 
+                 min = 1,
+                 value = 20)
+  })
+  
   output$rs_submitButton_ui <- renderUI({
-    if (is.null(vars$grps)) {
-      return(NULL)
-    } else {
-      actionButton("rs_submitButton", label = "Submit")
-    }
+    if (is.null(vars$grps)) return(NULL)
+    actionButton("rs_submitButton", label = "Submit")
   })
   
   observeEvent(input$rs_submitButton, {
     vars$gdirlist <- lapply(1:vars$grps, function(i) input[[paste0("group", i)]]) %>% setNames(paste("Group", 1:vars$grps))
   })
-
+  
+ 
 # Compile data ------------------------------------------------------------
 
 
   alldata <- eventReactive(input$rs_submitButton, {
+    nlargest <- input$rs_fazes
+    dif.between.groups <- input$rs_group_diff
     runs <- vars$gdirlist
     
     # add minutes to run names if there are multiple runs with the same number
@@ -92,9 +106,10 @@ function(input, output, session) {
     return(all.data)
   })
   
+ 
   plotdata <- reactive({
     alldata <- alldata()
-    
+   
     pd <- position_dodge(.4) # how far apart are the groups
     g <- list()
     i <- 1
@@ -117,18 +132,18 @@ function(input, output, session) {
     }
     return(g)
   })
-
+  
 # Plots ------------------------------------------------------------------- 
   
-  
+
   output$plot_households <- renderPlotly({
-    g <- plotdata()
-    g2 <- ggplotly(g[['Households']])
+   g <- plotdata()
+   g2 <- ggplotly(g[['Households']])
   })
   
   output$plot_employment <- renderPlotly({
-    g <- plotdata()
-    g2 <- ggplotly(g[['Employment']])
+   g <- plotdata()
+   g2 <- ggplotly(g[['Employment']])
   })
 
 
