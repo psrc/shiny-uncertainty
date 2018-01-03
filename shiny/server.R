@@ -15,7 +15,7 @@ function(input, output, session) {
   output$rs_group_diff_ui <- renderUI({
     if (is.null(vars$grps)) return(NULL)
     checkboxInput("rs_group_diff", 
-                  label = "Find the difference between groups",
+                  label = "Include difference between groups",
                   value = TRUE)
 
   })
