@@ -18,7 +18,9 @@ fluidPage(tags$style(type = "text/css", ".checkbox label { font-size: 14px;}"),
                                          uiOutput("rs_group_diff_ui"),
                                          uiOutput("rs_group_select_ui"),
                                          uiOutput("rs_fazes_ui"),
-                                         uiOutput("rs_submitButton_ui")
+                                         uiOutput("rs_submitButton_ui"),
+                                         br(),
+                                         br()
                                   ), # end column
                                   column(width = 10,
                                          fluidRow(plotlyOutput('plot_households', height = "425px")), # end fluidRow

@@ -71,7 +71,7 @@ function(input, output, session) {
         ind.data.all <- NULL
         for (run.name in runs[[igroup]]) { 
           # simplify run.name
-          rname <- run.name %>% str_split("/") %>% unlist() %>% .[10] 
+          rname <- basename(run.name)
           # load data
           rdir <- file.path(run.name, 'indicators') 
           ind.data <- fread(file.path(rdir, paste0('faz__table__', ind.name, '.csv')))[,c('faz_id', paste0(ind.name, '_2040')), with=FALSE]
