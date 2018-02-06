@@ -8,18 +8,24 @@ library(data.table)
 library(magrittr)
 library(stringr)
 
-base <- list(Modelsrv6 = "/media/modelsrv6d/opusgit/urbansim_data/data/psrc_parcel/runs",
+base <- list(Modelsrv5 = "/media/modelsrv5d/opusgit/urbansim_data/data/psrc_parcel/runs",
+             Modelsrv6 = "/media/modelsrv6d/opusgit/urbansim_data/data/psrc_parcel/runs",
              Modelsrv8 = "/media/modelsrv8d/opusgit/urbansim_data/data/psrc_parcel/runs",
              Modelsrv3 = "/media/modelsrv3e/opusgit/urbansim_data/data/psrc_parcel/runs"
              )
-# base <- list(Modelsrv6 = "//modelsrv6/d$/opusgit/urbansim_data/data/psrc_parcel/runs",
+# base <- list(Modelsrv5 = "//modelsrv5/d$/opusgit/urbansim_data/data/psrc_parcel/runs",
+#              Modelsrv6 = "//modelsrv6/d$/opusgit/urbansim_data/data/psrc_parcel/runs",
 #              Modelsrv8 = "//MODELSRV8/d$/opusgit/urbansim_data/data/psrc_parcel/runs",
 #              Modelsrv3 = "//modelsrv3/e$/opusgit/urbansim_data/data/psrc_parcel/runs"
 #              )
 # base <- list(Modelsrv3 = "/Volumes/e$/opusgit/urbansim_data/data/psrc_parcel/runs",
 #             Modelsrv8 = "/Volumes/d$/opusgit/urbansim_data/data/psrc_parcel/runs")
 
+wrkdir <- '/home/shiny/apps/shiny-uncertainty'
+# wrkdir <- 'C:/Users/CLam/Desktop/shiny-uncertainty'
+
 indicator.names <- c('Households', 'Employment')
+rgs.lu <- read.csv(file.path(wrkdir, "data/fips_rgs.csv"), header = TRUE) %>% as.data.table()
 
 # scan for all directories in servers
 allruns <- list()
@@ -30,3 +36,6 @@ for (b in 1:length(base)) {
   allruns[[length(allruns)+1]] <- dirlist
 }
 names(allruns) <- names(base) %>% toupper
+
+# subset for confidence interval directories
+bm.runs <- lapply(allruns, function(x) x[grep("bm_", names(x))]) %>% .[lapply(.,length)>0]

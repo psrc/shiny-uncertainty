@@ -2,6 +2,38 @@ fluidPage(tags$style(type = "text/css", ".checkbox label { font-size: 14px;}"),
           title="", windowTitle="Uncertainty",
             navbarPage(theme = shinytheme("readable"),
                        title = "UrbanSim Uncertainty", 
+                       tabPanel("Confidence Intervals",
+                                fluidPage(
+                                  column(width = 2,
+                                         uiOutput("ci_select_run_ui"), 
+                                         selectInput("ci_select_geog",
+                                                     label = "Geography",
+                                                     choices = c(#"City" = "city",
+                                                                 #"TAZ" = "taz",
+                                                                 #"FAZ" = "faz",
+                                                                 "Regional Geography" = "rgs"),
+                                                     selected = "rgs"),
+                                         selectInput("ci_select_year",
+                                                     label = "Year",
+                                                     choices = c("2017" = 2017,
+                                                                 "2040" = 2040,
+                                                                 "2050" = 2050),
+                                                     selected = 2050),
+                                         radioButtons("ci_select_ci",
+                                                      label = h6("Select Confidence Interval"),
+                                                      choices = list("80%" = 80, "95%" = 95)), #cinterval
+                                         actionButton("ci_submitButton",
+                                                      label = "Enter")
+                                         ),
+                                  column(width = 5,
+                                         # DT::dataTableOutput("ci_dt_hh")
+                                         plotlyOutput("ci_plot_emp", height = "800px")
+                                         ),
+                                  column(width = 5,
+                                         plotlyOutput("ci_plot_hh", height = "800px")
+                                         )
+                                ) # end fluidPage
+                                ), # end tabPanel
                        tabPanel("Random Seed",
                                 fluidPage(
                                   column(width = 2,
