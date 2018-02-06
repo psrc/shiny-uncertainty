@@ -7,6 +7,7 @@ library(reshape2)
 library(data.table)
 library(magrittr)
 library(stringr)
+library(scales)
 
 base <- list(Modelsrv5 = "/media/modelsrv5d/opusgit/urbansim_data/data/psrc_parcel/runs",
              Modelsrv6 = "/media/modelsrv6d/opusgit/urbansim_data/data/psrc_parcel/runs",
@@ -21,8 +22,8 @@ base <- list(Modelsrv5 = "/media/modelsrv5d/opusgit/urbansim_data/data/psrc_parc
 # base <- list(Modelsrv3 = "/Volumes/e$/opusgit/urbansim_data/data/psrc_parcel/runs",
 #             Modelsrv8 = "/Volumes/d$/opusgit/urbansim_data/data/psrc_parcel/runs")
 
-wrkdir <- '/home/shiny/apps/shiny-uncertainty'
-# wrkdir <- 'C:/Users/CLam/Desktop/shiny-uncertainty'
+wrkdir <- '/home/shiny/apps/shiny-uncertainty/'
+# wrkdir <- 'C:/Users/CLam/Desktop/shiny-uncertainty/'
 
 indicator.names <- c('Households', 'Employment')
 rgs.lu <- read.csv(file.path(wrkdir, "data/fips_rgs.csv"), header = TRUE) %>% as.data.table()
