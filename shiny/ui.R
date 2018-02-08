@@ -8,7 +8,7 @@ fluidPage(tags$style(type = "text/css", ".checkbox label { font-size: 14px;}"),
                                          uiOutput("ci_select_run_ui"), 
                                          selectInput("ci_select_geog",
                                                      label = "Geography",
-                                                     choices = c(#"City" = "city",
+                                                     choices = c("City" = "city",
                                                                  #"TAZ" = "taz",
                                                                  #"FAZ" = "faz",
                                                                  "Regional Geography" = "rgs"),
@@ -21,16 +21,22 @@ fluidPage(tags$style(type = "text/css", ".checkbox label { font-size: 14px;}"),
                                                      selected = 2050),
                                          radioButtons("ci_select_ci",
                                                       label = h6("Select Confidence Interval"),
-                                                      choices = list("80%" = 80, "95%" = 95)), #cinterval
+                                                      choices = list("80%" = 80, "95%" = 95)), 
+                                         selectInput("ci_select_county",
+                                                     label = h6("Filter by County"),
+                                                     choices = cnty.choices,
+                                                     selected = "All",
+                                                     multiple = TRUE
+                                                     ),
                                          actionButton("ci_submitButton",
                                                       label = "Enter")
                                          ),
                                   column(width = 5,
                                          # DT::dataTableOutput("ci_dt_hh")
-                                         plotlyOutput("ci_plot_emp", height = "800px")
+                                         plotlyOutput("ci_plot_emp", height = "820px")
                                          ),
                                   column(width = 5,
-                                         plotlyOutput("ci_plot_hh", height = "800px")
+                                         plotlyOutput("ci_plot_hh", height = "820px")
                                          )
                                 ) # end fluidPage
                                 ), # end tabPanel

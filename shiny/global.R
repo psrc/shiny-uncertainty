@@ -27,6 +27,10 @@ wrkdir <- '/home/shiny/apps/shiny-uncertainty/'
 
 indicator.names <- c('Households', 'Employment')
 rgs.lu <- read.csv(file.path(wrkdir, "data/fips_rgs.csv"), header = TRUE) %>% as.data.table()
+cities.lu <- read.csv(file.path(wrkdir, "data/cities.csv"), header = TRUE) %>% as.data.table()
+setnames(cities.lu, "County", "county_name")
+
+cnty.choices <- c("All" = "All", "King" = "King", "Kitsap" = "Kitsap", "Pierce" = "Pierce", "Snohomish" = "Snohomish")
 
 # scan for all directories in servers
 allruns <- list()

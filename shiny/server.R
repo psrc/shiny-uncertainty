@@ -9,6 +9,13 @@ function(input, output, session) {
                    multiple = FALSE)
   })
   
+  observe({
+    if ("All" %in% input$ci_select_county) {
+      selected_choices <- setdiff(cnty.choices, "All")
+      updateSelectInput(session, "ci_select_county", selected = selected_choices)
+    }
+  })
+  
   ci.data <- eventReactive(input$ci_submitButton, {
     tbl <- NULL
     filenames <- list.files(input$ci_select_run, pattern = "^\\d+(_\\w+)+_\\w+\\.txt")
@@ -21,7 +28,7 @@ function(input, output, session) {
                 geog = str_extract(f, "[a-z]+_[a-z]+\\.txt") %>% str_extract("^[a-z]+"))]
       ifelse(is.null(tbl), tbl <- t, tbl <- rbind(tbl, t))
     }
-    
+
     # melt & recast columns: source data
     dt <- melt.data.table(tbl, 
                           id.vars = c("id", "year", "attribute", "geog", "median"), 
@@ -31,35 +38,37 @@ function(input, output, session) {
     dt[,  `:=` (cinterval = str_extract(bound, "\\d+$"), bound2 = str_extract(bound, "[a-z]+"))]
     d <- dcast.data.table(dt, id + year + attribute + geog + cinterval + median ~ bound2, value.var = "estimate")
     
+    # filter and join lookup table
     if (input$ci_select_geog == 'rgs') {
       d1 <- d[year == input$ci_select_year & geog == input$ci_select_geog & cinterval == input$ci_select_ci]
-      d2 <- merge(d, rgs.lu, by.x = "id", by.y = "fips_rgs_id")
+      d2 <- merge(d1, rgs.lu, by.x = "id", by.y = "fips_rgs_id")
       setnames(d2,"fips_rgs_name","name")
+    } else if (input$ci_select_geog == 'city') {
+      d1 <- d[year == input$ci_select_year & geog == input$ci_select_geog & cinterval == input$ci_select_ci]
+      d2 <- merge(d1, cities.lu , by.x = "id", by.y = "city_id") 
+      setnames(d2,"city_name","name")
     } else {
       d2 <- d[year == input$ci_select_year & geog == input$ci_select_geog & cinterval == input$ci_select_ci]
     }
-   
     return(d2)
   })
   
   ci.plotdata <- eventReactive(input$ci_submitButton, {
     ci.data <- ci.data()  
+    # browser()
 
     g <- list()
     i <- 1
     ind.names <- indicator.names %>% tolower
     for (ind in ind.names) {
-      d <-  ci.data[attribute == ind & 
-                      geog == input$ci_select_geog & 
-                      year == input$ci_select_year & 
-                      cinterval == input$ci_select_ci,][
-                        , id := as.factor(id)][
-                        , name := as.factor(name)]
-  
-      g[[ind]] <- ggplot(d, aes(y= id, x= median, xmax=upper, xmin=lower)) + 
+      d <-  ci.data[attribute == ind & county_name %in% input$ci_select_county,
+                    ][, id := as.factor(id)
+                      ][, name := as.factor(name)]
+      
+      g[[ind]] <- ggplot(d, aes(y= reorder(name, median), x= median, xmax=upper, xmin=lower)) + 
         geom_errorbarh(aes(xmax=upper, xmin=lower), height = .5, colour="grey") +
         geom_point(shape = 20, size = .5) +
-        labs(title=indicator.names[i], x = "Estimate", y = "") +
+        labs(title=indicator.names[i], x = "", y = "") +
         scale_y_discrete() +
         scale_x_continuous(labels = comma, breaks = pretty_breaks(n=8)) +
         theme(
@@ -68,6 +77,9 @@ function(input, output, session) {
           legend.key.size = unit(0.012, "npc"), 
           plot.title=element_text(size=11, hjust=0, face="bold"), 
           axis.title.x = element_text(size=10),
+          axis.ticks.length = unit(.45, "cm"),
+          axis.ticks.y= element_line(colour = "white"),
+          axis.ticks.x= element_line(colour = "white"),
           legend.background = element_rect(fill="gray90"),
           text = element_text(family="Segoe UI")
         )
