@@ -2,11 +2,11 @@ function(input, output, session) {
   
 ## Confidence Intervals ----------------------------------------------------  
   
-  output$ci_select_run_ui <- renderUI({
-    selectizeInput("ci_select_run",
-                   label = "Select run",
+  output$ci_select_ci_dir_ui <- renderUI({
+    selectizeInput("ci_select_ci_dir",
+                   label = HTML("CI Directory<br/><font color = Gray size = 2>Select one or more directories"),
                    choices = bm.runs,
-                   multiple = FALSE)
+                   multiple = TRUE)
   })
   
   observe({
@@ -17,26 +17,33 @@ function(input, output, session) {
   })
   
   ci.data <- eventReactive(input$ci_submitButton, {
+    runs <- input$ci_select_ci_dir
     tbl <- NULL
-    filenames <- list.files(input$ci_select_run, pattern = "^\\d+(_\\w+)+_\\w+\\.txt")
-    
-    # loop & read each file
-    for (f in filenames) {
-      t <- NULL
-      t <- read.table(file.path(input$ci_select_run, f), header = TRUE) %>% as.data.table()
-      t[, `:=` (year = str_extract(f, "\\d+"), attribute = str_extract(f, "([a-z]*)\\.") %>% str_extract("[a-z]+"), 
-                geog = str_extract(f, "[a-z]+_[a-z]+\\.txt") %>% str_extract("^[a-z]+"))]
-      ifelse(is.null(tbl), tbl <- t, tbl <- rbind(tbl, t))
+  
+    # loop through ci directories
+    for (r in runs) {
+      filenames <- list.files(r, pattern = "^\\d+(_\\w+)+_\\w+\\.txt")
+      # loop & read each file
+      for (f in filenames) {
+        t <- NULL
+        # t <- read.table(file.path(input$ci_select_ci_dir, f), header = TRUE) %>% as.data.table()
+        t <- read.table(file.path(r, f), header = TRUE) %>% as.data.table()
+        t[, `:=` (year = str_extract(f, "\\d+"), 
+                  attribute = str_extract(f, "([a-z]*)\\.") %>% str_extract("[a-z]+"),
+                  geog = str_extract(f, "[a-z]+_[a-z]+\\.txt") %>% str_extract("^[a-z]+"),
+                  cidir = basename(r))]
+        ifelse(is.null(tbl), tbl <- t, tbl <- rbind(tbl, t))
+      }
     }
 
     # melt & recast columns: source data
     dt <- melt.data.table(tbl, 
-                          id.vars = c("id", "year", "attribute", "geog", "median"), 
+                          id.vars = c("id", "year", "attribute", "geog", "median", "cidir"), 
                           measure.vars = colnames(tbl)[3:6], 
                           variable.name = "bound",
                           value.name = "estimate") 
     dt[,  `:=` (cinterval = str_extract(bound, "\\d+$"), bound2 = str_extract(bound, "[a-z]+"))]
-    d <- dcast.data.table(dt, id + year + attribute + geog + cinterval + median ~ bound2, value.var = "estimate")
+    d <- dcast.data.table(dt, id + year + attribute + geog + cinterval + median + cidir ~ bound2, value.var = "estimate")
     
     # filter and join lookup table
     if (input$ci_select_geog == 'rgs') {
@@ -55,7 +62,7 @@ function(input, output, session) {
   
   ci.plotdata <- eventReactive(input$ci_submitButton, {
     ci.data <- ci.data()  
-    # browser()
+    pd <- position_dodge(.7) 
 
     g <- list()
     i <- 1
@@ -65,15 +72,14 @@ function(input, output, session) {
                     ][, id := as.factor(id)
                       ][, name := as.factor(name)]
       
-      g[[ind]] <- ggplot(d, aes(y= reorder(name, median), x= median, xmax=upper, xmin=lower)) + 
-        geom_errorbarh(aes(xmax=upper, xmin=lower), height = .5, colour="grey") +
-        geom_point(shape = 20, size = .5) +
+      g[[ind]] <- ggplot(d, aes(x = reorder(name, median), y = median, ymax=upper, ymin=lower, colour = cidir)) + 
+        geom_point(position = pd, shape = 21, fill = "gray90", size = 1) +
+        geom_errorbar(position = pd, height = .07) +
         labs(title=indicator.names[i], x = "", y = "") +
-        scale_y_discrete() +
-        scale_x_continuous(labels = comma, breaks = pretty_breaks(n=8)) +
+        scale_x_discrete() +
+        scale_y_continuous(labels = comma, breaks = pretty_breaks(n=8)) +
+        coord_flip()+
         theme(
-          legend.position=c(1,1),
-          legend.justification=c(1,1), legend.key=element_blank(),
           legend.key.size = unit(0.012, "npc"), 
           plot.title=element_text(size=11, hjust=0, face="bold"), 
           axis.title.x = element_text(size=10),
@@ -81,6 +87,7 @@ function(input, output, session) {
           axis.ticks.y= element_line(colour = "white"),
           axis.ticks.x= element_line(colour = "white"),
           legend.background = element_rect(fill="gray90"),
+          legend.title = element_blank(),
           text = element_text(family="Segoe UI")
         )
       i <- i + 1
