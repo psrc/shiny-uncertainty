@@ -31,10 +31,11 @@ fluidPage(tags$style(type = "text/css", ".checkbox label { font-size: 14px;}"),
                                                      multiple = TRUE
                                                      ),
                                          actionButton("ci_submitButton",
-                                                      label = "Enter")
+                                                      label = "Enter")#,
+                                         # hr(),
+                                         # uiOutput("ci_select_corrruns_ui")
                                          ),
                                   column(width = 5,
-                                         # DT::dataTableOutput("ci_dt_hh")
                                          plotlyOutput("ci_plot_emp", height = "820px")
                                          ),
                                   column(width = 5,

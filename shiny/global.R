@@ -8,6 +8,7 @@ library(data.table)
 library(magrittr)
 library(stringr)
 library(scales)
+# library(purrr)
 
 base <- list(Modelsrv5 = "/media/modelsrv5d/opusgit/urbansim_data/data/psrc_parcel/runs",
              Modelsrv6 = "/media/modelsrv6d/opusgit/urbansim_data/data/psrc_parcel/runs",
@@ -26,11 +27,18 @@ wrkdir <- '/home/shiny/apps/shiny-uncertainty/'
 # wrkdir <- 'C:/Users/CLam/Desktop/shiny-uncertainty/'
 
 indicator.names <- c('Households', 'Employment')
+
+# lookup tables and ancillary data
+cnty.choices <- c("All" = "All", "King" = "King", "Kitsap" = "Kitsap", "Pierce" = "Pierce", "Snohomish" = "Snohomish")
+
 rgs.lu <- read.csv(file.path(wrkdir, "data/fips_rgs.csv"), header = TRUE) %>% as.data.table()
+
 cities.lu <- read.csv(file.path(wrkdir, "data/cities.csv"), header = TRUE) %>% as.data.table()
 setnames(cities.lu, "County", "county_name")
 
-cnty.choices <- c("All" = "All", "King" = "King", "Kitsap" = "Kitsap", "Pierce" = "Pierce", "Snohomish" = "Snohomish")
+pol.num <- read.csv(file.path(wrkdir, "data/policy_nums.csv"), header = TRUE) %>% as.data.table()
+
+
 
 # scan for all directories in servers
 allruns <- list()

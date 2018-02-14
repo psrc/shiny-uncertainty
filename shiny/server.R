@@ -9,12 +9,41 @@ function(input, output, session) {
                    multiple = TRUE)
   })
   
+  # output$ci_select_corrruns_ui <- renderUI({
+  #   selectizeInput("ci_select_corrruns",
+  #                  label = "Runs",
+  #                  choices = corres.runs(),
+  #                  multiple = TRUE)
+  # })
+  
   observe({
     if ("All" %in% input$ci_select_county) {
       selected_choices <- setdiff(cnty.choices, "All")
       updateSelectInput(session, "ci_select_county", selected = selected_choices)
     }
   })
+  
+  # # read cache_directory.txt in each selected bm_ dir as additional run options
+  # corres.runs <- eventReactive(input$ci_submitButton, {
+  #   runs <- input$ci_select_ci_dir
+  #   
+  #   # find corresponding runs
+  #   filename <- "cache_directories.txt"
+  #   corr.runs <- NULL
+  #   for (r in seq_along(runs)) {
+  #     t <- read.table(file.path(runs[r], filename), col.names = TRUE, stringsAsFactors=F) %>% as.data.table
+  #     rs <- t[[colnames(t)]] %>% lapply(function(x) basename(x)) %>% unlist
+  #     ifelse(is.null(corr.runs), corr.runs <- rs, corr.runs <- c(corr.runs, rs))
+  #   }
+  #   
+  #   # subset allruns with corresponding runs
+  #   sub.runs <- NULL
+  #   for (i in seq_along(corr.runs)) {
+  #     s <- map(allruns, ~ .[corr.runs[i]]) %>% discard(is.na) 
+  #     ifelse(is.null(sub.runs), sub.runs <- s, sub.runs <- append(sub.runs, s))
+  #   }
+  #   sub.runs <- flatten_chr(sub.runs)
+  # })
   
   ci.data <- eventReactive(input$ci_submitButton, {
     runs <- input$ci_select_ci_dir
@@ -26,7 +55,6 @@ function(input, output, session) {
       # loop & read each file
       for (f in filenames) {
         t <- NULL
-        # t <- read.table(file.path(input$ci_select_ci_dir, f), header = TRUE) %>% as.data.table()
         t <- read.table(file.path(r, f), header = TRUE) %>% as.data.table()
         t[, `:=` (year = str_extract(f, "\\d+"), 
                   attribute = str_extract(f, "([a-z]*)\\.") %>% str_extract("[a-z]+"),
@@ -48,8 +76,10 @@ function(input, output, session) {
     # filter and join lookup table
     if (input$ci_select_geog == 'rgs') {
       d1 <- d[year == input$ci_select_year & geog == input$ci_select_geog & cinterval == input$ci_select_ci]
-      d2 <- merge(d1, rgs.lu, by.x = "id", by.y = "fips_rgs_id")
-      setnames(d2,"fips_rgs_name","name")
+      d2 <- merge(d1, rgs.lu, by.x = "id", by.y = "fips_rgs_id") # display geography codes
+      # setnames(d2,"fips_rgs_name","name") # display geography names
+      setnames(d2,"fips_rgs_label","name")
+      # d2 <- d[year == input$ci_select_year & geog == input$ci_select_geog & cinterval == input$ci_select_ci]
     } else if (input$ci_select_geog == 'city') {
       d1 <- d[year == input$ci_select_year & geog == input$ci_select_geog & cinterval == input$ci_select_ci]
       d2 <- merge(d1, cities.lu , by.x = "id", by.y = "city_id") 
@@ -72,9 +102,17 @@ function(input, output, session) {
                     ][, id := as.factor(id)
                       ][, name := as.factor(name)]
       
-      g[[ind]] <- ggplot(d, aes(x = reorder(name, median), y = median, ymax=upper, ymin=lower, colour = cidir)) + 
-        geom_point(position = pd, shape = 21, fill = "gray90", size = 1) +
-        geom_errorbar(position = pd, height = .07) +
+      g[[ind]] <- ggplot() + 
+        geom_point(data = d, 
+                   aes(x = reorder(name, median), y = median, colour = cidir), 
+                   position = pd, 
+                   shape = 21, 
+                   fill = "gray90", 
+                   size = 1) +
+        geom_errorbar(data = d, 
+                      aes(x = reorder(name, median), y = median, colour = cidir, ymax=upper, ymin=lower),
+                      position = pd, 
+                      height = .07) +
         labs(title=indicator.names[i], x = "", y = "") +
         scale_x_discrete() +
         scale_y_continuous(labels = comma, breaks = pretty_breaks(n=8)) +
@@ -95,6 +133,17 @@ function(input, output, session) {
     return(g)
   })
   
+  # Currently only Emp nums applicable
+  policy <- eventReactive(input$ci_submitButton, {
+    cols <- grep("Emp\\d{2}$", names(pol.num), value = TRUE)
+    cols2 <- c("fips_rgs_id", "fips_rgs_name", "county_name", "area_name")
+    p <- pol.num[, c(cols2, cols), with = FALSE
+                 ][, `:=` (attribute = cols, label = "RGS Policy Number", name = as.factor(fips_rgs_id))]
+    setnames(p, cols, "policy_est")
+    p1 <- p[county_name %in% isolate(input$ci_select_county), ]
+    return(p1)
+  })
+  
   output$ci_plot_hh <- renderPlotly({
     g <- ci.plotdata()
     g2 <- ggplotly(g[['households']])
@@ -102,7 +151,20 @@ function(input, output, session) {
   
   output$ci_plot_emp <- renderPlotly({
     g <- ci.plotdata()
-    g2 <- ggplotly(g[['employment']])
+    p <- policy()
+    if (isolate(input$ci_select_geog) == 'rgs') {
+      g2 <- ggplotly(g[['employment']] + 
+                       geom_point(data = p, 
+                                  aes(x = name, y = policy_est, fill = label),
+                                  colour = "grey32",
+                                  position = position_dodge(.7), 
+                                  shape = 0, 
+                                  size = 1) +
+                       scale_fill_discrete()
+      )
+    } else {
+      g2 <- ggplotly(g[['employment']])
+    }
   })
   
 
