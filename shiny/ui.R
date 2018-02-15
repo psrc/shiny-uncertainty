@@ -35,12 +35,16 @@ fluidPage(tags$style(type = "text/css", ".checkbox label { font-size: 14px;}"),
                                          # hr(),
                                          # uiOutput("ci_select_corrruns_ui")
                                          ),
-                                  column(width = 5,
-                                         plotlyOutput("ci_plot_emp", height = "820px")
-                                         ),
-                                  column(width = 5,
-                                         plotlyOutput("ci_plot_hh", height = "820px")
-                                         )
+                                  column(width = 10,
+                                         tabsetPanel(type = "tabs",
+                                                     tabPanel("Employment",
+                                                              plotlyOutput("ci_plot_emp", height = "800px")
+                                                     ),
+                                                     tabPanel("Households",
+                                                              plotlyOutput("ci_plot_hh", height = "800px")
+                                                     )
+                                         ) # end tabsetPanel
+                                  ) # end column
                                 ) # end fluidPage
                                 ), # end tabPanel
                        tabPanel("Random Seed",

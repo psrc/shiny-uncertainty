@@ -77,9 +77,8 @@ function(input, output, session) {
     if (input$ci_select_geog == 'rgs') {
       d1 <- d[year == input$ci_select_year & geog == input$ci_select_geog & cinterval == input$ci_select_ci]
       d2 <- merge(d1, rgs.lu, by.x = "id", by.y = "fips_rgs_id") # display geography codes
-      # setnames(d2,"fips_rgs_name","name") # display geography names
-      setnames(d2,"fips_rgs_label","name")
-      # d2 <- d[year == input$ci_select_year & geog == input$ci_select_geog & cinterval == input$ci_select_ci]
+      # setnames(d2,"fips_rgs_name","name") # display geography names, change line 141 too
+      setnames(d2,"fips_rgs_label","name") # display fips code
     } else if (input$ci_select_geog == 'city') {
       d1 <- d[year == input$ci_select_year & geog == input$ci_select_geog & cinterval == input$ci_select_ci]
       d2 <- merge(d1, cities.lu , by.x = "id", by.y = "city_id") 
@@ -124,7 +123,7 @@ function(input, output, session) {
           axis.ticks.length = unit(.45, "cm"),
           axis.ticks.y= element_line(colour = "white"),
           axis.ticks.x= element_line(colour = "white"),
-          legend.background = element_rect(fill="gray90"),
+          legend.background = element_rect(fill="white"),
           legend.title = element_blank(),
           text = element_text(family="Segoe UI")
         )
@@ -159,7 +158,7 @@ function(input, output, session) {
                                   colour = "grey32",
                                   position = position_dodge(.7), 
                                   shape = 0, 
-                                  size = 1) +
+                                  size = 1.5) +
                        scale_fill_discrete()
       )
     } else {
