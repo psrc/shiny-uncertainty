@@ -158,13 +158,12 @@ function(input, output, session) {
     if (isolate(input$ci_select_geog) == 'rgs') {
       g2 <- ggplotly(g[['employment']] + 
                        geom_point(data = p,
-                                  aes(x = name, y = policy_est, fill = label),
-                                  colour = "grey32",
+                                  aes(x = name, y = policy_est), #, fill = label
+                                  # colour = "grey32",
                                   position = position_dodge(.9),
                                   shape = 0,
-                                  size = 1.5, 
-                                  show.legend = TRUE) +
-                       scale_fill_identity()
+                                  size = 1.5) #+
+                       # scale_fill_identity()
       )
     } else {
       g2 <- ggplotly(g[['employment']])
