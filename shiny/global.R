@@ -36,7 +36,7 @@ rgs.lvl <- rgs.lu[rev(order(county_name, rgs_id))][,fips_rgs_name := as.characte
 
 cities.lu <- read.csv(file.path(wrkdir, "data/cities.csv"), header = TRUE) %>% as.data.table()
 setnames(cities.lu, "County", "county_name")
-cities.lvl <- cities.lu[rev(order(county_name, city_name))][['city_name']]
+# cities.lvl <- cities.lu[rev(order(county_name, city_name))][['city_name']]
 
 pol.num <- read.csv(file.path(wrkdir, "data/policy_nums.csv"), stringsAsFactors = FALSE, header = TRUE) %>% as.data.table()
 

@@ -84,7 +84,8 @@ function(input, output, session) {
       d1 <- d[year == input$ci_select_year & geog == input$ci_select_geog & cinterval == input$ci_select_ci]
       d2 <- merge(d1, cities.lu , by.x = "id", by.y = "city_id") 
       setnames(d2,"city_name","name")
-      d2[, name := factor(name, levels = cities.lvl)]
+      d2[, name := factor(name)]
+      # d2[, name := factor(name, levels = cities.lvl)]
     } else {
       d2 <- d[year == input$ci_select_year & geog == input$ci_select_geog & cinterval == input$ci_select_ci]
       d2[, name := factor(name)]
@@ -159,7 +160,7 @@ function(input, output, session) {
                        geom_point(data = p,
                                   aes(x = name, y = policy_est, fill = label),
                                   colour = "grey32",
-                                  position = position_dodge(.7),
+                                  position = position_dodge(.9),
                                   shape = 0,
                                   size = 1.5, 
                                   show.legend = TRUE) +
