@@ -76,40 +76,41 @@ function(input, output, session) {
     # filter and join lookup table
     if (input$ci_select_geog == 'rgs') {
       d1 <- d[year == input$ci_select_year & geog == input$ci_select_geog & cinterval == input$ci_select_ci]
-      d2 <- merge(d1, rgs.lu, by.x = "id", by.y = "fips_rgs_id") # display geography codes
-      # setnames(d2,"fips_rgs_name","name") # display geography names, change line 141 too
-      setnames(d2,"fips_rgs_label","name") # display fips code
+      d2 <- merge(d1, rgs.lu, by.x = "id", by.y = "fips_rgs_id") 
+      setnames(d2,"fips_rgs_name","name") # display geography names, edit policy() too
+      d2[, name := factor(name, levels = rgs.lvl)]
+      # setnames(d2,"fips_rgs_label","name") # display fips code
     } else if (input$ci_select_geog == 'city') {
       d1 <- d[year == input$ci_select_year & geog == input$ci_select_geog & cinterval == input$ci_select_ci]
       d2 <- merge(d1, cities.lu , by.x = "id", by.y = "city_id") 
       setnames(d2,"city_name","name")
+      d2[, name := factor(name, levels = cities.lvl)]
     } else {
       d2 <- d[year == input$ci_select_year & geog == input$ci_select_geog & cinterval == input$ci_select_ci]
+      d2[, name := factor(name)]
     }
     return(d2)
   })
   
   ci.plotdata <- eventReactive(input$ci_submitButton, {
     ci.data <- ci.data()  
-    pd <- position_dodge(.7) 
+    pd <- position_dodge(.9) 
 
     g <- list()
     i <- 1
     ind.names <- indicator.names %>% tolower
     for (ind in ind.names) {
-      d <-  ci.data[attribute == ind & county_name %in% input$ci_select_county,
-                    ][, id := as.factor(id)
-                      ][, name := as.factor(name)]
+      d <-  ci.data[attribute == ind & county_name %in% input$ci_select_county,][, id := as.factor(id)]
       
       g[[ind]] <- ggplot() + 
         geom_point(data = d, 
-                   aes(x = reorder(name, median), y = median, colour = cidir), 
+                   aes(x = name, y = median, colour = cidir), 
                    position = pd, 
                    shape = 21, 
                    fill = "gray90", 
                    size = 1) +
         geom_errorbar(data = d, 
-                      aes(x = reorder(name, median), y = median, colour = cidir, ymax=upper, ymin=lower),
+                      aes(x = name, y = median, colour = cidir, ymax=upper, ymin=lower),
                       position = pd, 
                       height = .07) +
         labs(title=indicator.names[i], x = "", y = "") +
@@ -117,8 +118,8 @@ function(input, output, session) {
         scale_y_continuous(labels = comma, breaks = pretty_breaks(n=8)) +
         coord_flip()+
         theme(
-          legend.key.size = unit(0.012, "npc"), 
-          plot.title=element_text(size=11, hjust=0, face="bold"), 
+          legend.key.size = unit(0.012, "npc"),
+          plot.title=element_text(size=11, hjust=0, face="bold"),
           axis.title.x = element_text(size=10),
           axis.ticks.length = unit(.45, "cm"),
           axis.ticks.y= element_line(colour = "white"),
@@ -137,8 +138,9 @@ function(input, output, session) {
     cols <- grep("Emp\\d{2}$", names(pol.num), value = TRUE)
     cols2 <- c("fips_rgs_id", "fips_rgs_name", "county_name", "area_name")
     p <- pol.num[, c(cols2, cols), with = FALSE
-                 ][, `:=` (attribute = cols, label = "RGS Policy Number", name = as.factor(fips_rgs_id))]
-    setnames(p, cols, "policy_est")
+                 ][, `:=` (attribute = cols, label = "RGS Policy Number", 
+                           name = factor(fips_rgs_name, levels = rgs.lvl))] 
+    setnames(p, cols, "policy_est") 
     p1 <- p[county_name %in% isolate(input$ci_select_county), ]
     return(p1)
   })
@@ -151,15 +153,17 @@ function(input, output, session) {
   output$ci_plot_emp <- renderPlotly({
     g <- ci.plotdata()
     p <- policy()
+    
     if (isolate(input$ci_select_geog) == 'rgs') {
       g2 <- ggplotly(g[['employment']] + 
-                       geom_point(data = p, 
+                       geom_point(data = p,
                                   aes(x = name, y = policy_est, fill = label),
                                   colour = "grey32",
-                                  position = position_dodge(.7), 
-                                  shape = 0, 
-                                  size = 1.5) +
-                       scale_fill_discrete()
+                                  position = position_dodge(.7),
+                                  shape = 0,
+                                  size = 1.5, 
+                                  show.legend = TRUE) +
+                       scale_fill_identity()
       )
     } else {
       g2 <- ggplotly(g[['employment']])

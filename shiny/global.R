@@ -32,11 +32,13 @@ indicator.names <- c('Households', 'Employment')
 cnty.choices <- c("All" = "All", "King" = "King", "Kitsap" = "Kitsap", "Pierce" = "Pierce", "Snohomish" = "Snohomish")
 
 rgs.lu <- read.csv(file.path(wrkdir, "data/fips_rgs.csv"), header = TRUE) %>% as.data.table()
+rgs.lvl <- rgs.lu[rev(order(county_name, rgs_id))][,fips_rgs_name := as.character(fips_rgs_name)][['fips_rgs_name']]
 
 cities.lu <- read.csv(file.path(wrkdir, "data/cities.csv"), header = TRUE) %>% as.data.table()
 setnames(cities.lu, "County", "county_name")
+cities.lvl <- cities.lu[rev(order(county_name, city_name))][['city_name']]
 
-pol.num <- read.csv(file.path(wrkdir, "data/policy_nums.csv"), header = TRUE) %>% as.data.table()
+pol.num <- read.csv(file.path(wrkdir, "data/policy_nums.csv"), stringsAsFactors = FALSE, header = TRUE) %>% as.data.table()
 
 
 
