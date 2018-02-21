@@ -72,14 +72,13 @@ function(input, output, session) {
                           value.name = "estimate") 
     dt[,  `:=` (cinterval = str_extract(bound, "\\d+$"), bound2 = str_extract(bound, "[a-z]+"))]
     d <- dcast.data.table(dt, id + year + attribute + geog + cinterval + median + cidir ~ bound2, value.var = "estimate")
-    
+   
     # filter and join lookup table
     if (input$ci_select_geog == 'rgs') {
       d1 <- d[year == input$ci_select_year & geog == input$ci_select_geog & cinterval == input$ci_select_ci]
       d2 <- merge(d1, rgs.lu, by.x = "id", by.y = "fips_rgs_id") 
       setnames(d2,"fips_rgs_name","name") # display geography names, edit policy() too
       d2[, name := factor(name, levels = rgs.lvl)]
-      # setnames(d2,"fips_rgs_label","name") # display fips code
     } else if (input$ci_select_geog == 'city') {
       d1 <- d[year == input$ci_select_year & geog == input$ci_select_geog & cinterval == input$ci_select_ci]
       d2 <- merge(d1, cities.lu , by.x = "id", by.y = "city_id") 
@@ -99,7 +98,8 @@ function(input, output, session) {
 
     g <- list()
     i <- 1
-    ind.names <- indicator.names %>% tolower
+    all.indicator.names <- c(indicator.names, "Population")
+    ind.names <- all.indicator.names %>% tolower
     for (ind in ind.names) {
       d <-  ci.data[attribute == ind & county_name %in% input$ci_select_county,][, id := as.factor(id)]
       
@@ -114,7 +114,7 @@ function(input, output, session) {
                       aes(x = name, y = median, colour = cidir, ymax=upper, ymin=lower),
                       position = pd, 
                       height = .07) +
-        labs(title=indicator.names[i], x = "", y = "") +
+        labs(title=all.indicator.names[i], x = "", y = "") +
         scale_x_discrete() +
         scale_y_continuous(labels = comma, breaks = pretty_breaks(n=8)) +
         coord_flip()+
@@ -134,15 +134,16 @@ function(input, output, session) {
     return(g)
   })
   
-  # Currently only Emp nums applicable
+  # Regional Growth Strategy Policy Numbers
   policy <- eventReactive(input$ci_submitButton, {
-    cols <- grep("Emp\\d{2}$", names(pol.num), value = TRUE)
+    cols <- grep("[Pop|Emp]\\d{2}$", names(pol.num), value = TRUE)
+    cols.vector <- setNames(c("population", "employment"), cols)
     cols2 <- c("fips_rgs_id", "fips_rgs_name", "county_name", "area_name")
-    p <- pol.num[, c(cols2, cols), with = FALSE
-                 ][, `:=` (attribute = cols, label = "RGS Policy Number", 
-                           name = factor(fips_rgs_name, levels = rgs.lvl))] 
-    setnames(p, cols, "policy_est") 
-    p1 <- p[county_name %in% isolate(input$ci_select_county), ]
+    p <- pol.num[, c(cols2, cols), with = FALSE]
+    dt <- melt.data.table(p, id.vars = cols2, measure.vars = cols, variable.name = "cols", value.name = "policy_est")
+    dt$attribute <- cols.vector[dt$cols]
+    dt[, `:=` (label = "RGS Policy Number", name = factor(fips_rgs_name, levels = rgs.lvl))]
+    p1 <- dt[county_name %in% isolate(input$ci_select_county), ]
     return(p1)
   })
   
@@ -153,21 +154,31 @@ function(input, output, session) {
   
   output$ci_plot_emp <- renderPlotly({
     g <- ci.plotdata()
-    p <- policy()
-    
+    policy <- policy()
+    p <- policy[attribute == 'employment',]
     if (isolate(input$ci_select_geog) == 'rgs') {
       g2 <- ggplotly(g[['employment']] + 
                        geom_point(data = p,
-                                  aes(x = name, y = policy_est), #, fill = label
-                                  # colour = "grey32",
+                                  aes(x = name, y = policy_est),
                                   position = position_dodge(.9),
                                   shape = 0,
-                                  size = 1.5) #+
-                       # scale_fill_identity()
+                                  size = 1.5)
       )
     } else {
       g2 <- ggplotly(g[['employment']])
     }
+  })
+  
+  output$ci_plot_pop <- renderPlotly({
+    g <- ci.plotdata()
+    policy <- policy()
+    p <- policy[attribute == 'population',]
+    g2 <- ggplotly(g[['population']] + 
+                     geom_point(data = p,
+                                aes(x = name, y = policy_est),
+                                position = position_dodge(.9),
+                                shape = 0,
+                                size = 1.5))
   })
   
 

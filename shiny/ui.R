@@ -18,7 +18,7 @@ fluidPage(tags$style(type = "text/css", ".checkbox label { font-size: 14px;}"),
                                          selectInput("ci_select_year",
                                                      label = "Year",
                                                      choices = c("2017" = 2017,
-                                                                 "2040" = 2040,
+                                                                 # "2040" = 2040,
                                                                  "2050" = 2050),
                                                      selected = 2050),
                                          radioButtons("ci_select_ci",
@@ -42,6 +42,9 @@ fluidPage(tags$style(type = "text/css", ".checkbox label { font-size: 14px;}"),
                                                      ),
                                                      tabPanel("Households",
                                                               plotlyOutput("ci_plot_hh", height = "800px")
+                                                     ),
+                                                     tabPanel("Population",
+                                                              plotlyOutput("ci_plot_pop", height = "800px")
                                                      )
                                          ) # end tabsetPanel
                                   ) # end column
