@@ -8,7 +8,6 @@ library(data.table)
 library(magrittr)
 library(stringr)
 library(scales)
-# library(purrr)
 
 base <- list(Modelsrv5 = "/media/modelsrv5d/opusgit/urbansim_data/data/psrc_parcel/runs",
              Modelsrv6 = "/media/modelsrv6d/opusgit/urbansim_data/data/psrc_parcel/runs",
@@ -39,7 +38,7 @@ setnames(cities.lu, "County", "county_name")
 # cities.lvl <- cities.lu[rev(order(county_name, city_name))][['city_name']]
 
 pol.num <- read.csv(file.path(wrkdir, "data/policy_nums.csv"), stringsAsFactors = FALSE, header = TRUE) %>% as.data.table()
-
+pol.num.city <- read.csv(file.path(wrkdir, "data/policy_nums_city.csv"), stringsAsFactors = FALSE, header = TRUE) %>% as.data.table()
 
 
 # scan for all directories in servers

@@ -49,7 +49,7 @@ function(input, output, session) {
     if (input$ci_select_geog == 'rgs') {
       d1 <- d[year == input$ci_select_year & geog == input$ci_select_geog & cinterval == input$ci_select_ci]
       d2 <- merge(d1, rgs.lu, by.x = "id", by.y = "fips_rgs_id") 
-      setnames(d2,"fips_rgs_name","name") # display geography names, edit policy() too
+      setnames(d2,"fips_rgs_name","name") 
       d2[, name := factor(name, levels = rgs.lvl)]
     } else if (input$ci_select_geog == 'city') {
       d1 <- d[year == input$ci_select_year & geog == input$ci_select_geog & cinterval == input$ci_select_ci]
@@ -119,6 +119,31 @@ function(input, output, session) {
     return(p1)
   })
   
+  # City Target Numbers (unofficial)
+  policy.city <- eventReactive(input$ci_submitButton, {
+    cols <- grep("[Pop|Emp]2050$", names(pol.num.city), value = TRUE)
+    cols.vector <- setNames(c("population", "employment"), cols)
+    cols2 <- c("RG", "County", "Juris", "county_name")
+    p <- pol.num.city[, c(cols2, cols), with = FALSE]
+    dt <- melt.data.table(p, id.vars = cols2, measure.vars = cols, variable.name = "cols", value.name = "policy_est")
+    dt$attribute <- cols.vector[dt$cols]
+    dt[, `:=` (label = "Target Number", name = factor(Juris))]
+    p1 <- dt[county_name %in% isolate(input$ci_select_county), ]
+    return(p1)
+  })
+  
+  # Switch to appropriate policy number dataset
+  policy.df <- eventReactive(input$ci_submitButton, {
+    policy <- policy()
+    policy.city <- policy.city()
+    if (isolate(input$ci_select_geog) == 'rgs') {
+      p <- policy
+    } else if (isolate(input$ci_select_geog) == 'city') {
+      p <- policy.city
+    }
+    return(p)
+  })
+  
   output$ci_plot_hh <- renderPlotly({
     g <- ci.plotdata()
     g2 <- ggplotly(g[['households']])
@@ -126,9 +151,10 @@ function(input, output, session) {
   
   output$ci_plot_emp <- renderPlotly({
     g <- ci.plotdata()
-    policy <- policy()
-    p <- policy[attribute == 'employment',]
-    if (isolate(input$ci_select_geog) == 'rgs') {
+    policy.df <- policy.df()
+    
+    if (isolate(input$ci_select_geog) == 'rgs'|isolate(input$ci_select_geog) == 'city') {
+      p <- policy.df[attribute == 'employment',]
       g2 <- ggplotly(g[['employment']] + 
                        geom_point(data = p,
                                   aes(x = name, y = policy_est),
@@ -143,19 +169,20 @@ function(input, output, session) {
   
   output$ci_plot_pop <- renderPlotly({
     g <- ci.plotdata()
-    policy <- policy()
-    p <- policy[attribute == 'population',]
-    if (isolate(input$ci_select_geog) == 'rgs') {
-      g2 <- ggplotly(g[['population']] + 
+    policy.df <- policy.df()
+    
+    if (isolate(input$ci_select_geog) == 'rgs' | isolate(input$ci_select_geog) == 'city') {
+      p <-  policy.df[attribute == 'population',]
+      g2 <- ggplotly(g[['population']] +
                        geom_point(data = p,
                                   aes(x = name, y = policy_est),
                                   position = position_dodge(.9),
                                   shape = 0,
-                                  size = 1.5))
+                                  size = 1.5)
+                     )
     } else {
       g2 <- ggplotly(g[['population']])
     }
-    
   })
   
 
