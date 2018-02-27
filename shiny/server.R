@@ -9,13 +9,6 @@ function(input, output, session) {
                    multiple = TRUE)
   })
   
-  # output$ci_select_corrruns_ui <- renderUI({
-  #   selectizeInput("ci_select_corrruns",
-  #                  label = "Runs",
-  #                  choices = corres.runs(),
-  #                  multiple = TRUE)
-  # })
-  
   observe({
     if ("All" %in% input$ci_select_county) {
       selected_choices <- setdiff(cnty.choices, "All")
@@ -23,27 +16,6 @@ function(input, output, session) {
     }
   })
   
-  # # read cache_directory.txt in each selected bm_ dir as additional run options
-  # corres.runs <- eventReactive(input$ci_submitButton, {
-  #   runs <- input$ci_select_ci_dir
-  #   
-  #   # find corresponding runs
-  #   filename <- "cache_directories.txt"
-  #   corr.runs <- NULL
-  #   for (r in seq_along(runs)) {
-  #     t <- read.table(file.path(runs[r], filename), col.names = TRUE, stringsAsFactors=F) %>% as.data.table
-  #     rs <- t[[colnames(t)]] %>% lapply(function(x) basename(x)) %>% unlist
-  #     ifelse(is.null(corr.runs), corr.runs <- rs, corr.runs <- c(corr.runs, rs))
-  #   }
-  #   
-  #   # subset allruns with corresponding runs
-  #   sub.runs <- NULL
-  #   for (i in seq_along(corr.runs)) {
-  #     s <- map(allruns, ~ .[corr.runs[i]]) %>% discard(is.na) 
-  #     ifelse(is.null(sub.runs), sub.runs <- s, sub.runs <- append(sub.runs, s))
-  #   }
-  #   sub.runs <- flatten_chr(sub.runs)
-  # })
   
   ci.data <- eventReactive(input$ci_submitButton, {
     runs <- input$ci_select_ci_dir
@@ -173,12 +145,17 @@ function(input, output, session) {
     g <- ci.plotdata()
     policy <- policy()
     p <- policy[attribute == 'population',]
-    g2 <- ggplotly(g[['population']] + 
-                     geom_point(data = p,
-                                aes(x = name, y = policy_est),
-                                position = position_dodge(.9),
-                                shape = 0,
-                                size = 1.5))
+    if (isolate(input$ci_select_geog) == 'rgs') {
+      g2 <- ggplotly(g[['population']] + 
+                       geom_point(data = p,
+                                  aes(x = name, y = policy_est),
+                                  position = position_dodge(.9),
+                                  shape = 0,
+                                  size = 1.5))
+    } else {
+      g2 <- ggplotly(g[['population']])
+    }
+    
   })
   
 
