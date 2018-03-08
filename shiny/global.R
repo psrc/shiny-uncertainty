@@ -8,6 +8,7 @@ library(data.table)
 library(magrittr)
 library(stringr)
 library(scales)
+library(purrr)
 
 base <- list(Modelsrv5 = "/media/modelsrv5d/opusgit/urbansim_data/data/psrc_parcel/runs",
              Modelsrv6 = "/media/modelsrv6d/opusgit/urbansim_data/data/psrc_parcel/runs",
@@ -52,4 +53,4 @@ for (b in 1:length(base)) {
 names(allruns) <- names(base) %>% toupper
 
 # subset for confidence interval directories
-bm.runs <- lapply(allruns, function(x) x[grep("bm_", names(x))]) %>% .[lapply(.,length)>0]
+bm.runs <- lapply(allruns, function(x) x[grep("^bm_", names(x))]) %>% .[lapply(.,length)>0]
