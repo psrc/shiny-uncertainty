@@ -46,51 +46,51 @@ fluidPage(tags$style(type = "text/css", ".checkbox label { font-size: 14px;}"),
                                   ) # end column
                                 ) # end fluidPage
                                 ), # end tabPanel
-                       # tabPanel("CI AAPC",
-                       #          fluidPage(column(width = 2,
-                       #                           uiOutput("aapc_select_ci_dir_ui"), 
-                       #                           selectInput("aapc_select_geog",
-                       #                                       label = "Geography",
-                       #                                       choices = c("City" = "city",
-                       #                                                   #"TAZ" = "taz",
-                       #                                                   #"FAZ" = "faz",
-                       #                                                   "Regional Geography" = "rgs"),
-                       #                                       selected = "rgs"),
-                       #                           selectInput("aapc_select_year",
-                       #                                       label = "Year",
-                       #                                       choices = c("2017" = 2017,
-                       #                                                   # "2040" = 2040,
-                       #                                                   "2050" = 2050),
-                       #                                       selected = 2050),
-                       #                           radioButtons("aapc_select_ci",
-                       #                                        label = h6("Confidence Interval"),
-                       #                                        choices = list("80%" = 80, "95%" = 95)), 
-                       #                           selectInput("aapc_select_county",
-                       #                                       label = h6("Filter by County"),
-                       #                                       choices = cnty.choices,
-                       #                                       selected = "All",
-                       #                                       multiple = TRUE
-                       #                           ),
-                       #                           actionButton("aapc_submitButton",
-                       #                                        label = "Enter")#,
-                       #                           # hr(),
-                       #                           # uiOutput("aapc_select_corrruns_ui")
-                       #                           ),# end column
-                       #                    column(width = 10,
-                       #                           tabsetPanel(type = "tabs",
-                       #                                       tabPanel("Employment",
-                       #                                                plotlyOutput("aapc_plot_emp", height = "800px")
-                       #                                       ),
-                       #                                       tabPanel("Households",
-                       #                                                plotlyOutput("aapc_plot_hh", height = "800px")
-                       #                                       ),
-                       #                                       tabPanel("Population",
-                       #                                                plotlyOutput("aapc_plot_pop", height = "800px")
-                       #                                       )
-                       #                           ) # end tabsetPanel
-                       #                           )# end column
-                       #                    )# end fluidPage
-                       #          ), # end tabPanel
+                       tabPanel("CI AAPC",
+                                fluidPage(column(width = 2,
+                                                 uiOutput("aapc_select_ci_dir_ui"),
+                                                 selectInput("aapc_select_geog",
+                                                             label = "Geography",
+                                                             choices = c("City" = "city",
+                                                                         #"TAZ" = "taz",
+                                                                         #"FAZ" = "faz",
+                                                                         "Regional Geography" = "rgs"),
+                                                             selected = "rgs"),
+                                                 selectInput("aapc_select_year",
+                                                             label = "Year",
+                                                             choices = c("2017" = 2017,
+                                                                         # "2040" = 2040,
+                                                                         "2050" = 2050),
+                                                             selected = 2050),
+                                                 radioButtons("aapc_select_ci",
+                                                              label = h6("Confidence Interval"),
+                                                              choices = list("80%" = 80, "95%" = 95)),
+                                                 selectInput("aapc_select_county",
+                                                             label = h6("Filter by County"),
+                                                             choices = cnty.choices,
+                                                             selected = "All",
+                                                             multiple = TRUE
+                                                 ),
+                                                 actionButton("aapc_submitButton",
+                                                              label = "Enter")#,
+                                                 # hr(),
+                                                 # uiOutput("aapc_select_corrruns_ui")
+                                                 ),# end column
+                                          column(width = 10,
+                                                 tabsetPanel(type = "tabs",
+                                                             tabPanel("Employment",
+                                                                      plotlyOutput("aapc_plot_emp", height = "800px")
+                                                             ),
+                                                             tabPanel("Households",
+                                                                      plotlyOutput("aapc_plot_hh", height = "800px")
+                                                             ),
+                                                             tabPanel("Population",
+                                                                      plotlyOutput("aapc_plot_pop", height = "800px")
+                                                             )
+                                                 ) # end tabsetPanel
+                                                 )# end column
+                                          )# end fluidPage
+                                ), # end tabPanel
                        tabPanel("Random Seed",
                                 fluidPage(
                                   column(width = 2,
