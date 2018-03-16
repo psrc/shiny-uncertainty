@@ -1,7 +1,8 @@
 fluidPage(tags$style(type = "text/css", ".checkbox label { font-size: 14px;}"),
           title="", windowTitle="Uncertainty",
             navbarPage(theme = shinytheme("readable"),
-                       title = "UrbanSim Uncertainty", 
+                       title = "UrbanSim Uncertainty",
+                       id = "inNavbarPage",
                        tabPanel("Confidence Intervals (CI)",
                                 fluidPage(
                                   column(width = 2,
@@ -29,7 +30,11 @@ fluidPage(tags$style(type = "text/css", ".checkbox label { font-size: 14px;}"),
                                                      multiple = TRUE
                                                      ),
                                          actionButton("ci_submitButton",
-                                                      label = "Enter")
+                                                      label = "Enter"),
+                                         br(),
+                                         br(),
+                                         p("For more information about Confidence Intervals and its interpretation, click the link below"),
+                                         actionLink("ci_link_to_About", "About::Confidence Intervals")
                                          ),
                                   column(width = 10,
                                          tabsetPanel(type = "tabs",
@@ -72,9 +77,11 @@ fluidPage(tags$style(type = "text/css", ".checkbox label { font-size: 14px;}"),
                                                              multiple = TRUE
                                                  ),
                                                  actionButton("aapc_submitButton",
-                                                              label = "Enter")#,
-                                                 # hr(),
-                                                 # uiOutput("aapc_select_corrruns_ui")
+                                                              label = "Enter"),
+                                                 br(),
+                                                 br(),
+                                                 p("For more information about Confidence Intervals and its interpretation, click the link below"),
+                                                 actionLink("ci_aapc_link_to_About", "About::Confidence Intervals")
                                                  ),# end column
                                           column(width = 10,
                                                  tabsetPanel(type = "tabs",
@@ -117,6 +124,24 @@ fluidPage(tags$style(type = "text/css", ".checkbox label { font-size: 14px;}"),
                                   ) # end column
                                 ) # end fluidPage
                        ), # end tabPanel
+                       tabPanel("About",
+                                fluidPage(
+                                  column(width = 1),
+                                  column(width = 10,
+                                         br(),
+                                         h6("Confidence Intervals"),
+                                         p("The confidence interval is a measure of uncertainty in the forecast and there 
+                                           are many possible uncertainty sources (e.g., inaccuracies in the input data, 
+                                           the ways in which the model represents reality, the randomness in those processes)."),
+                                         p("To calculate the confidence interval, model results are first compared with known outcomes, 
+                                           which in this case are 2017 data. The uncertainty captured in those comparisons 
+                                           is then extended into the future to arrive at a set of confidence intervals for a forecast year."),
+                                         p("An 80% confidence interval represents a 1-in-10 chance that the actual result 
+                                           will fall below the interval and a 1-in-10 chance that it will fall above. 
+                                           The median value is the best forecast point.")),
+                                  column(width = 1)
+                                ) # end fluidPage
+                                ), # end tabPanel
                        fluid = TRUE
                        )# end navbarPage
 )# end fluidPage
