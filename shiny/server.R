@@ -456,7 +456,12 @@ function(input, output, session) {
 
   output$aapc_plot_pop <- renderPlotly({
     a <- a.plot.data.filter()
-    p <- aapc.plot.plus(a, "population")
+    r <- nrow(a[attribute == "population"]) %>% as.numeric
+    p <- aapc.plot.plus(a, "population") +
+      geom_segment(aes(y = 1.2, yend = 1.2, x = 0, colour = "Regional AAPC 2014-50"), 
+                   xend = r + 1,
+                   linetype = 3,
+                   show.legend = TRUE)
     ggplotly(p)
   })
 
@@ -468,7 +473,12 @@ function(input, output, session) {
 
   output$aapc_plot_emp <- renderPlotly({
     a <- a.plot.data.filter()
-    p <- aapc.plot.plus(a, "employment")
+    r <- nrow(a[attribute == "employment"]) %>% as.numeric
+    p <- aapc.plot.plus(a, "employment") +
+      geom_segment(aes(y = 1.4, yend = 1.4, x = 0, colour = "Regional AAPC 2014-50"),
+                   xend = r + 1,
+                   linetype = 3,
+                   show.legend = TRUE)
     ggplotly(p)
   })
     
