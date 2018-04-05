@@ -63,19 +63,8 @@ function(input, output, session) {
 
 ## Capacity Data -----------------------------------------------------------
 
-  ci.cap.data <- reactive({
-    
+  cap.data <- reactive({
     c <- melt.data.table(cap, id.vars = colnames(cap)[1:4], measure.vars = colnames(cap)[5:6], variable.name = "attribute", value.name = "capacity")
-    if (input$ci_select_geog == 'rgs') {
-      c1 <- c[, lapply(.SD, sum), by = list(fips_rgs_id, attribute), .SDcols = "capacity"]
-      c2 <- merge(c1, rgs.lu, by = "fips_rgs_id")
-      c2[, name := fips_rgs_name]
-    } else {
-      c2 <- c %>% 
-        mutate(county_name = recode(county_id, `33` = "King", `35` = "Kitsap", `53` = "Pierce", `61` = "Snohomish"),
-               name = city_name)
-    }
-    return(c2)
   }) 
 
   
@@ -93,6 +82,21 @@ function(input, output, session) {
       selected_choices <- setdiff(cnty.choices, "All")
       updateSelectInput(session, "ci_select_county", selected = selected_choices)
     }
+  })
+  
+  ci.cap.data <- eventReactive(input$ci_submitButton, {
+    c <- cap.data()
+   
+    if (input$ci_select_geog == 'rgs') {
+      c1 <- c[, lapply(.SD, sum), by = list(fips_rgs_id, attribute), .SDcols = "capacity"]
+      c2 <- merge(c1, rgs.lu, by = "fips_rgs_id")
+      c2[, name := fips_rgs_name]
+    } else if (input$ci_select_geog == 'city') {
+      c2 <- c %>% 
+        mutate(county_name = recode(county_id, `33` = "King", `35` = "Kitsap", `53` = "Pierce", `61` = "Snohomish"),
+               name = city_name) %>% as.data.table()
+    }
+    return(c2)
   })
   
   ci.cap.data.filter <- eventReactive(input$ci_submitButton, {
