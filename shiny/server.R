@@ -86,15 +86,14 @@ function(input, output, session) {
   
   ci.cap.data <- eventReactive(input$ci_submitButton, {
     c <- cap.data()
-   
+
     if (input$ci_select_geog == 'rgs') {
       c1 <- c[, lapply(.SD, sum), by = list(fips_rgs_id, attribute), .SDcols = "capacity"]
       c2 <- merge(c1, rgs.lu, by = "fips_rgs_id")
       c2[, name := fips_rgs_name]
     } else if (input$ci_select_geog == 'city') {
-      c2 <- c %>% 
-        mutate(county_name = recode(county_id, `33` = "King", `35` = "Kitsap", `53` = "Pierce", `61` = "Snohomish"),
-               name = city_name) %>% as.data.table()
+      c2 <- merge(c, cities.lu, by = c("city_id", "county_id", "city_name"))
+      c2[, name := city_name]
     }
     return(c2)
   })
@@ -308,7 +307,7 @@ function(input, output, session) {
     policy.df <- policy.df()
     baseyr <- ci.baseyr.data.filter()
     cap <- ci.cap.data.filter()
-    
+
     if (isolate(input$ci_select_geog) == 'rgs'|isolate(input$ci_select_geog) == 'city') {
       b <- baseyr[attribute == 'employment', ]
       p <- policy.df[attribute == 'employment',]
