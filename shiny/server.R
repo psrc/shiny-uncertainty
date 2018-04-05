@@ -32,7 +32,7 @@ function(input, output, session) {
   baseyr.data <- reactive({
     run <- "run_78.run_2018_02_28_14_03" # hardcoding this run for baseyr data b/c 1) rgs_id correct & 2) has rgs pop indicator
     # run <- "run_2.run_2018_02_27_14_54" # this run does not have rgs pop indicator
-    dir <- map(allruns, run) %>% discard(is.null)
+    dir <- map(allruns, run) %>% purrr::discard(is.null)
 
     geographies <- c("fips_rgs", "city")
     all.indicator.names <- c(indicator.names, "Population") %>% tolower
@@ -60,7 +60,25 @@ function(input, output, session) {
     return(dt)
   })
 
-      
+
+## Capacity Data -----------------------------------------------------------
+
+  ci.cap.data <- reactive({
+    
+    c <- melt.data.table(cap, id.vars = colnames(cap)[1:4], measure.vars = colnames(cap)[5:6], variable.name = "attribute", value.name = "capacity")
+    if (input$ci_select_geog == 'rgs') {
+      c1 <- c[, lapply(.SD, sum), by = list(fips_rgs_id, attribute), .SDcols = "capacity"]
+      c2 <- merge(c1, rgs.lu, by = "fips_rgs_id")
+      c2[, name := fips_rgs_name]
+    } else {
+      c2 <- c %>% 
+        mutate(county_name = recode(county_id, `33` = "King", `35` = "Kitsap", `53` = "Pierce", `61` = "Snohomish"),
+               name = city_name)
+    }
+    return(c2)
+  }) 
+
+  
 ## Confidence Intervals ----------------------------------------------------  
   
   output$ci_select_ci_dir_ui <- renderUI({
@@ -77,9 +95,13 @@ function(input, output, session) {
     }
   })
   
+  ci.cap.data.filter <- eventReactive(input$ci_submitButton, {
+    ci.cap.data()[county_name %in% isolate(input$ci_select_county), ]
+  })
+  
   ci.baseyr.data <- eventReactive(input$ci_submitButton, {
     baseyr <- baseyr.data()[geog == input$ci_select_geog, ]
-    # browser()
+ 
     if (input$ci_select_geog == 'rgs') {
       d2 <- merge(baseyr, rgs.lu, by.x = "id", by.y = "fips_rgs_id")
       setnames(d2,"fips_rgs_name","name") 
@@ -247,15 +269,30 @@ function(input, output, session) {
                show.legend = TRUE)
   } 
   
+  ci.ggplot.add.capdata <- function(data) {
+    c <- data
+    geom_point(data = c,
+               aes(x = name, y = capacity, colour = "Total Capacity"),
+               # fill = "grey53",
+               stroke = .45,
+               position = position_dodge(.9),
+               shape = 3,
+               size = 1.3,
+               show.legend = TRUE)
+  }
+  
   output$ci_plot_hh <- renderPlotly({
     g <- ci.plotdata()
     baseyr <- ci.baseyr.data.filter()
+    cap <- ci.cap.data.filter()
     
     if (isolate(input$ci_select_geog) == 'rgs'|isolate(input$ci_select_geog) == 'city') {
-      b <- baseyr[attribute == 'households', ]
+      b <- baseyr[attribute == 'households',]
+      c <- cap[attribute == 'households',]
       
       g2 <- ggplotly(g[['households']] +
-                       ci.ggplot.add.baseyr(b))
+                       ci.ggplot.add.baseyr(b) +
+                       ci.ggplot.add.capdata(c))
                        
     } else {
       g2 <- ggplotly(g[['households']])
@@ -266,13 +303,17 @@ function(input, output, session) {
     g <- ci.plotdata()
     policy.df <- policy.df()
     baseyr <- ci.baseyr.data.filter()
+    cap <- ci.cap.data.filter()
+    
     if (isolate(input$ci_select_geog) == 'rgs'|isolate(input$ci_select_geog) == 'city') {
       b <- baseyr[attribute == 'employment', ]
       p <- policy.df[attribute == 'employment',]
+      c <- cap[attribute == 'employment',]
       
       g2 <- ggplotly(g[['employment']] +
                        ci.ggplot.add.policy(p) +
-                       ci.ggplot.add.baseyr(b))
+                       ci.ggplot.add.baseyr(b) + 
+                       ci.ggplot.add.capdata(c))
                        
     } else {
       g2 <- ggplotly(g[['employment']])

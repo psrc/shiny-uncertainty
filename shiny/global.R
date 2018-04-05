@@ -41,6 +41,8 @@ setnames(cities.lu, "County", "county_name")
 pol.num <- read.csv(file.path(wrkdir, "data/policy_nums.csv"), stringsAsFactors = FALSE, header = TRUE) %>% as.data.table()
 pol.num.city <- read.csv(file.path(wrkdir, "data/policy_nums_city.csv"), stringsAsFactors = FALSE, header = TRUE) %>% as.data.table()
 
+cap <- read.csv(file.path(wrkdir, "data/UStotal_capacity_cities_run101.csv"), stringsAsFactors = FALSE, header = TRUE) %>% as.data.table()
+setnames(cap, c("DU", "job_capacity"), c("households", "employment"))
 
 # scan for all directories in servers
 allruns <- list()
