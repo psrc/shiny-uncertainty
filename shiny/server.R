@@ -77,6 +77,98 @@ function(input, output, session) {
                    multiple = TRUE)
   })
   
+  output$ci_select_helptext_ui <- renderUI({
+    if (input$ci_preview_submitButton) {
+      helpText("Adjust the following criteria as necessary and click 'Enter'")
+    } else {
+      return(NULL)
+    }
+  })
+  
+  output$ci_select_year_ui <- renderUI({
+    if (input$ci_preview_submitButton) {
+      if (is.null(ci.data.preview())) return(NULL)
+      years <- unique(ci.data.preview()$year)
+      selectInput("ci_select_year",
+                  label = "Year",
+                  choices = years,
+                  selected = 2050)
+    } else {
+      return(NULL)
+    }
+  })
+  
+  output$ci_select_geog_ui <- renderUI({
+    if (input$ci_preview_submitButton) {
+      selectInput("ci_select_geog",
+                  label = "Geography",
+                  choices = c("City" = "city",
+                              #"TAZ" = "taz",
+                              #"FAZ" = "faz",
+                              "Regional Geography" = "rgs"),
+                  selected = "rgs")
+    } else {
+      return(NULL)
+    }
+  })
+  
+  output$ci_select_ci_ui <- renderUI({
+    if (input$ci_preview_submitButton) {
+      radioButtons("ci_select_ci",
+                   label = h6("Confidence Interval"),
+                   choices = list("80%" = 80, "95%" = 95))
+    } else {
+      return(NULL)
+    }
+    
+  })
+  
+  output$ci_select_county_ui <- renderUI({
+    if (input$ci_preview_submitButton) {
+      selectInput("ci_select_county",
+                  label = h6("Filter by County"),
+                  choices = cnty.choices,
+                  selected = "All",
+                  multiple = TRUE
+      )
+    } else {
+      return(NULL)
+    }
+ 
+  })
+  
+  output$ci_submitButton_ui <- renderUI({
+    if (input$ci_preview_submitButton) {
+      actionButton("ci_submitButton",
+                   label = "Enter")
+    } else {
+      return(NULL)
+    }
+   
+  })
+  
+  ci.data.preview <- eventReactive(input$ci_preview_submitButton, {
+    # read runs
+    runs <- input$ci_select_ci_dir
+    tbl <- NULL
+    
+    # loop through ci directories
+    for (r in runs) {
+      filenames <- list.files(r, pattern = "^\\d+(_\\w+)+_\\w+\\.txt")
+      # loop & read each file
+      for (f in filenames) {
+        t <- NULL
+        t <- read.table(file.path(r, f), header = TRUE) %>% as.data.table()
+        t[, `:=` (year = str_extract(f, "\\d+"), 
+                  attribute = str_extract(f, "([a-z]*)\\.") %>% str_extract("[a-z]+"),
+                  geog = str_extract(f, "[a-z]+_[a-z]+\\.txt") %>% str_extract("^[a-z]+"),
+                  cidir = basename(r))]
+        ifelse(is.null(tbl), tbl <- t, tbl <- rbind(tbl, t))
+      }
+    }
+    return(tbl)
+  })
+  
   observe({
     if ("All" %in% input$ci_select_county) {
       selected_choices <- setdiff(cnty.choices, "All")
@@ -152,6 +244,7 @@ function(input, output, session) {
     # filter and join lookup table
     if (input$ci_select_geog == 'rgs') {
       d1 <- d[year == input$ci_select_year & geog == input$ci_select_geog & cinterval == input$ci_select_ci]
+      # d1 <- d[year == input$ci_select_year & geog == input$ci_select_geog]
       d2 <- merge(d1, rgs.lu, by.x = "id", by.y = "fips_rgs_id") 
       setnames(d2,"fips_rgs_name","name") 
       d2[, name := factor(name, levels = rgs.lvl)]
@@ -303,10 +396,12 @@ function(input, output, session) {
   })
   
   output$ci_plot_emp <- renderPlotly({
+    # data <- ci.data()
     g <- ci.plotdata()
     policy.df <- policy.df()
     baseyr <- ci.baseyr.data.filter()
     cap <- ci.cap.data.filter()
+    # browser()
 
     if (isolate(input$ci_select_geog) == 'rgs'|isolate(input$ci_select_geog) == 'city') {
       b <- baseyr[attribute == 'employment', ]
