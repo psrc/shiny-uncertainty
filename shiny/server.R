@@ -63,9 +63,9 @@ function(input, output, session) {
 
 ## Capacity Data -----------------------------------------------------------
 
-  cap.data <- reactive({
-    c <- melt.data.table(cap, id.vars = colnames(cap)[1:4], measure.vars = colnames(cap)[5:6], variable.name = "attribute", value.name = "capacity")
-  }) 
+  # cap.data <- reactive({
+  #   c <- melt.data.table(cap, id.vars = colnames(cap)[1:4], measure.vars = colnames(cap)[5:6], variable.name = "attribute", value.name = "capacity")
+  # }) 
 
   
 ## Confidence Intervals ----------------------------------------------------  
@@ -176,23 +176,23 @@ function(input, output, session) {
     }
   })
   
-  ci.cap.data <- eventReactive(input$ci_submitButton, {
-    c <- cap.data()
-
-    if (input$ci_select_geog == 'rgs') {
-      c1 <- c[, lapply(.SD, sum), by = list(fips_rgs_id, attribute), .SDcols = "capacity"]
-      c2 <- merge(c1, rgs.lu, by = "fips_rgs_id")
-      c2[, name := fips_rgs_name]
-    } else if (input$ci_select_geog == 'city') {
-      c2 <- merge(c, cities.lu, by = c("city_id", "county_id", "city_name"))
-      c2[, name := city_name]
-    }
-    return(c2)
-  })
-  
-  ci.cap.data.filter <- eventReactive(input$ci_submitButton, {
-    ci.cap.data()[county_name %in% isolate(input$ci_select_county), ]
-  })
+  # ci.cap.data <- eventReactive(input$ci_submitButton, {
+  #   c <- cap.data()
+  # 
+  #   if (input$ci_select_geog == 'rgs') {
+  #     c1 <- c[, lapply(.SD, sum), by = list(fips_rgs_id, attribute), .SDcols = "capacity"]
+  #     c2 <- merge(c1, rgs.lu, by = "fips_rgs_id")
+  #     c2[, name := fips_rgs_name]
+  #   } else if (input$ci_select_geog == 'city') {
+  #     c2 <- merge(c, cities.lu, by = c("city_id", "county_id", "city_name"))
+  #     c2[, name := city_name]
+  #   }
+  #   return(c2)
+  # })
+  # 
+  # ci.cap.data.filter <- eventReactive(input$ci_submitButton, {
+  #   ci.cap.data()[county_name %in% isolate(input$ci_select_county), ]
+  # })
   
   ci.baseyr.data <- eventReactive(input$ci_submitButton, {
     baseyr <- baseyr.data()[geog == input$ci_select_geog, ]
@@ -380,15 +380,16 @@ function(input, output, session) {
   output$ci_plot_hh <- renderPlotly({
     g <- ci.plotdata()
     baseyr <- ci.baseyr.data.filter()
-    cap <- ci.cap.data.filter()
+    # cap <- ci.cap.data.filter()
     
     if (isolate(input$ci_select_geog) == 'rgs'|isolate(input$ci_select_geog) == 'city') {
       b <- baseyr[attribute == 'households',]
-      c <- cap[attribute == 'households',]
+      # c <- cap[attribute == 'households',]
       
       g2 <- ggplotly(g[['households']] +
-                       ci.ggplot.add.baseyr(b) +
-                       ci.ggplot.add.capdata(c))
+                       ci.ggplot.add.baseyr(b) #+
+                       # ci.ggplot.add.capdata(c)
+                       )
                        
     } else {
       g2 <- ggplotly(g[['households']])
@@ -400,18 +401,19 @@ function(input, output, session) {
     g <- ci.plotdata()
     policy.df <- policy.df()
     baseyr <- ci.baseyr.data.filter()
-    cap <- ci.cap.data.filter()
+    # cap <- ci.cap.data.filter()
     # browser()
 
     if (isolate(input$ci_select_geog) == 'rgs'|isolate(input$ci_select_geog) == 'city') {
       b <- baseyr[attribute == 'employment', ]
       p <- policy.df[attribute == 'employment',]
-      c <- cap[attribute == 'employment',]
+      # c <- cap[attribute == 'employment',]
       
       g2 <- ggplotly(g[['employment']] +
                        ci.ggplot.add.policy(p) +
-                       ci.ggplot.add.baseyr(b) + 
-                       ci.ggplot.add.capdata(c))
+                       ci.ggplot.add.baseyr(b) #+ 
+                       # ci.ggplot.add.capdata(c)
+                       )
                        
     } else {
       g2 <- ggplotly(g[['employment']])
